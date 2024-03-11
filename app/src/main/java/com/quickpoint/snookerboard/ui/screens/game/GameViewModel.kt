@@ -8,19 +8,82 @@ import com.quickpoint.snookerboard.BuildConfig
 import com.quickpoint.snookerboard.core.utils.Constants
 import com.quickpoint.snookerboard.core.utils.JobQueue
 import com.quickpoint.snookerboard.core.utils.MatchAction
-import com.quickpoint.snookerboard.core.utils.MatchAction.*
+import com.quickpoint.snookerboard.core.utils.MatchAction.FOUL_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_ENDED
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_ENDING_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_LAST_BLACK_FOULED_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_LOG_ACTIONS_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_MISS_FORFEIT
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_MISS_FORFEIT_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_RERACK_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_RESPOT_BLACK_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_START_NEW
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_TO_END
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_UNDO
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_UPDATED
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_CANCEL
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_CANCEL_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_ENDED
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_ENDING_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_START_NEW
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_TO_END
+import com.quickpoint.snookerboard.core.utils.MatchAction.NAV_TO_POST_MATCH
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_FRAME_ENDING_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_FRAME_RERACK_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_MATCH_ENDING_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_NO_BALL
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_UNDO
 import com.quickpoint.snookerboard.core.utils.sendEmail
-import com.quickpoint.snookerboard.data.DataStore
 import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_FREEBALL
 import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_LONG_SHOT
 import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_REST_SHOT
-import com.quickpoint.snookerboard.domain.models.*
+import com.quickpoint.snookerboard.domain.models.DomainActionLog
+import com.quickpoint.snookerboard.domain.models.DomainBall
 import com.quickpoint.snookerboard.domain.models.DomainBall.FREEBALL
 import com.quickpoint.snookerboard.domain.models.DomainBall.NOBALL
+import com.quickpoint.snookerboard.domain.models.DomainBallManager
+import com.quickpoint.snookerboard.domain.models.DomainBreak
+import com.quickpoint.snookerboard.domain.models.DomainFrame
+import com.quickpoint.snookerboard.domain.models.DomainPot
 import com.quickpoint.snookerboard.domain.models.DomainPot.FOULATTEMPT
 import com.quickpoint.snookerboard.domain.models.DomainPot.FREE
+import com.quickpoint.snookerboard.domain.models.DomainScore
+import com.quickpoint.snookerboard.domain.models.PotAction
 import com.quickpoint.snookerboard.domain.models.PotAction.FIRST
-import com.quickpoint.snookerboard.domain.models.PotType.*
+import com.quickpoint.snookerboard.domain.models.PotType
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_ADDRED
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FOUL
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FOUL_ATTEMPT
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FREE
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FREE_ACTIVE
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_HIT
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_LAST_BLACK_FOULED
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_MISS
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_REMOVE_COLOR
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_REMOVE_RED
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_RESPOT_BLACK
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_SAFE
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_SAFE_MISS
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_SNOOKER
+import com.quickpoint.snookerboard.domain.models.addLog
+import com.quickpoint.snookerboard.domain.models.calculatePoints
+import com.quickpoint.snookerboard.domain.models.endFrame
+import com.quickpoint.snookerboard.domain.models.foulValue
+import com.quickpoint.snookerboard.domain.models.frameScoreDiff
+import com.quickpoint.snookerboard.domain.models.getPotFromType
+import com.quickpoint.snookerboard.domain.models.isFrameAndMatchEqual
+import com.quickpoint.snookerboard.domain.models.isFrameEqual
+import com.quickpoint.snookerboard.domain.models.isFrameInProgress
+import com.quickpoint.snookerboard.domain.models.isLastBall
+import com.quickpoint.snookerboard.domain.models.isLastBlack
+import com.quickpoint.snookerboard.domain.models.isMatchInProgress
+import com.quickpoint.snookerboard.domain.models.lastPotType
+import com.quickpoint.snookerboard.domain.models.listOfPotTypesForNoBallSnackbar
+import com.quickpoint.snookerboard.domain.models.onPot
+import com.quickpoint.snookerboard.domain.models.removeLastPotFromFrameStack
+import com.quickpoint.snookerboard.domain.models.resetBalls
+import com.quickpoint.snookerboard.domain.models.resetFrame
+import com.quickpoint.snookerboard.domain.models.resetMatch
 import com.quickpoint.snookerboard.domain.repository.DataStoreRepository
 import com.quickpoint.snookerboard.domain.repository.GameRepository
 import com.quickpoint.snookerboard.domain.utils.MatchSettings
@@ -39,8 +102,10 @@ import javax.inject.Inject
 @HiltViewModel
 class GameViewModel @Inject constructor(
     private val gameRepository: GameRepository,
-    val dataStoreRepository: DataStoreRepository
-) : ViewModel() {
+    val dataStoreRepository: DataStoreRepository,
+    private val ballManager: DomainBallManager,
+    private val matchSettings: MatchSettings,
+    ) : ViewModel() {
 
     // Variables
     var score: MutableList<DomainScore> = mutableListOf()
@@ -141,7 +206,7 @@ class GameViewModel @Inject constructor(
     private fun handlePot(pot: DomainPot) {
         pot.potId = MatchSettings.uniqueId
         handlePotFreeballToggle(pot.potType)
-        ballStack.onPot(pot.potType, pot.potAction)
+        ballManager.onPot(ballStack, pot.potType, pot.potAction)
         frameStack.onPot(pot, score[MatchSettings.crtPlayer].pointsWithoutReturn, score)
         score.calculatePoints(pot, 1, ballStack.foulValue())
         val actionLog = pot.getActionLog("handlePot()", ballStack.lastOrNull()?.ballType, frameStack.size)
@@ -166,7 +231,7 @@ class GameViewModel @Inject constructor(
         MatchSettings.crtPlayer = frameStack.last().player
         val pot = frameStack.removeLastPotFromFrameStack(score)
         val actionLog = pot.getActionLog("HandleUndo()", ballStack.lastOrNull()?.ballType, frameStack.size)
-        ballStack.onUndo(pot.potType, pot.potAction, frameStack)
+        ballManager.onUndo(ballStack, pot.potType, pot.potAction, frameStack)
         handleUndoFreeballToggle(pot.potType, frameStack.lastPotType())
         score.calculatePoints(pot, -1, ballStack.foulValue())
         onEventFrameUpdated(actionLog)
@@ -183,7 +248,7 @@ class GameViewModel @Inject constructor(
     )
 
     // Checker methods
-    fun isFrameMathematicallyOver() = ballStack.availablePoints() < score.frameScoreDiff()
+    fun isFrameMathematicallyOver() = ballManager.availablePoints(ballStack) < score.frameScoreDiff()
 
     fun emailLogs(context: Context) = viewModelScope.launch {
         val logs = gameRepository.getDomainActionLogs().toString()
@@ -209,7 +274,9 @@ class GameViewModel @Inject constructor(
         when (potType) {
             TYPE_FREE_ACTIVE -> dataStoreRepository.savePrefAndSwitchBoolValue(K_BOOL_TOGGLE_FREEBALL)
             TYPE_HIT, TYPE_FREE, TYPE_MISS, TYPE_SAFE, TYPE_SAFE_MISS, TYPE_SNOOKER, TYPE_FOUL -> dataStoreRepository.savePrefs(
-                K_BOOL_TOGGLE_FREEBALL, false)
+                K_BOOL_TOGGLE_FREEBALL, false
+            )
+
             TYPE_ADDRED, TYPE_REMOVE_RED, TYPE_REMOVE_COLOR, TYPE_LAST_BLACK_FOULED, TYPE_RESPOT_BLACK, TYPE_FOUL_ATTEMPT -> {}
         }
     }
@@ -222,6 +289,7 @@ class GameViewModel @Inject constructor(
                 TYPE_FREE_ACTIVE -> dataStoreRepository.savePrefAndSwitchBoolValue(K_BOOL_TOGGLE_FREEBALL)
                 else -> dataStoreRepository.savePrefs(K_BOOL_TOGGLE_FREEBALL, false)
             }
+
             TYPE_HIT, TYPE_ADDRED, TYPE_REMOVE_RED, TYPE_REMOVE_COLOR, TYPE_LAST_BLACK_FOULED, TYPE_RESPOT_BLACK, TYPE_FOUL_ATTEMPT -> {}
         }
     }

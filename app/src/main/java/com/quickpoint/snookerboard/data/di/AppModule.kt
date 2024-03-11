@@ -3,6 +3,7 @@ package com.quickpoint.snookerboard.data.di
 import android.content.Context
 import com.quickpoint.snookerboard.data.DataStore
 import com.quickpoint.snookerboard.data.database.SnookerDatabase
+import com.quickpoint.snookerboard.domain.models.DomainBallManager
 import com.quickpoint.snookerboard.domain.repository.DataStoreRepository
 import com.quickpoint.snookerboard.domain.utils.MatchSettings
 import dagger.Module
@@ -30,4 +31,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSettings(dataStoreRepository: DataStoreRepository) = MatchSettings(dataStoreRepository)
+
+    @Provides
+    fun provideDomainBallManager(matchSettings: MatchSettings) = DomainBallManager(matchSettings)
 }

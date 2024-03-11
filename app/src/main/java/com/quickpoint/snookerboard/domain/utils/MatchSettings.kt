@@ -96,8 +96,8 @@ class MatchSettings @Inject constructor(
         var counterRetake = 0
         var pointsWithoutReturn = 0
         var crtFrame = 0L
-        var isFreeballEnabled = false
     }
+        var isFreeballEnabled = false
 
     private var _uniqueId = 0L
     private var _foulModifier = 0
