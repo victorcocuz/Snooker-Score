@@ -3,10 +3,32 @@ package com.quickpoint.snookerboard.ui.components
 import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -20,13 +42,27 @@ import com.quickpoint.snookerboard.core.base.Event
 import com.quickpoint.snookerboard.core.utils.BallAdapterType
 import com.quickpoint.snookerboard.data.K_INT_MATCH_HANDICAP_FRAME
 import com.quickpoint.snookerboard.domain.models.DomainBall
-import com.quickpoint.snookerboard.domain.models.DomainBall.*
-import com.quickpoint.snookerboard.domain.utils.MatchSettings
+import com.quickpoint.snookerboard.domain.models.DomainBall.BLACK
+import com.quickpoint.snookerboard.domain.models.DomainBall.BLUE
+import com.quickpoint.snookerboard.domain.models.DomainBall.BROWN
+import com.quickpoint.snookerboard.domain.models.DomainBall.COLOR
+import com.quickpoint.snookerboard.domain.models.DomainBall.FREEBALL
+import com.quickpoint.snookerboard.domain.models.DomainBall.GREEN
+import com.quickpoint.snookerboard.domain.models.DomainBall.NOBALL
+import com.quickpoint.snookerboard.domain.models.DomainBall.PINK
+import com.quickpoint.snookerboard.domain.models.DomainBall.RED
+import com.quickpoint.snookerboard.domain.models.DomainBall.YELLOW
+import com.quickpoint.snookerboard.domain.utils.MatchConfig
 import com.quickpoint.snookerboard.domain.utils.getHandicap
 import com.quickpoint.snookerboard.domain.utils.getSettingsTextIdByKeyAndValue
 import com.quickpoint.snookerboard.domain.utils.isSettingsButtonSelected
 import com.quickpoint.snookerboard.ui.screens.rules.RulesViewModel
-import com.quickpoint.snookerboard.ui.theme.*
+import com.quickpoint.snookerboard.ui.theme.Beige
+import com.quickpoint.snookerboard.ui.theme.Black
+import com.quickpoint.snookerboard.ui.theme.CreamBright
+import com.quickpoint.snookerboard.ui.theme.Green
+import com.quickpoint.snookerboard.ui.theme.White
+import com.quickpoint.snookerboard.ui.theme.spacing
 import kotlinx.coroutines.launch
 
 
@@ -41,13 +77,14 @@ fun ClickableText(text: String, onClick: () -> Unit) = Button(
 fun RulesHandicapLabel(
     rulesVm: RulesViewModel,
     key: String,
+    matchConfig: MatchConfig
 ) {
     val rulesUpdateAction by rulesVm.eventMatchSettingsChange.collectAsState(Event(Unit))
-    var handicap by remember { mutableStateOf(0) }
+    var handicap by remember { mutableIntStateOf(0) }
     LaunchedEffect(rulesUpdateAction) {
         handicap = when (key) {
-            K_INT_MATCH_HANDICAP_FRAME -> MatchSettings.handicapFrame
-            else -> MatchSettings.handicapMatch
+            K_INT_MATCH_HANDICAP_FRAME -> matchConfig.handicapFrame
+            else -> matchConfig.handicapMatch
         }
     }
     Text(
@@ -64,10 +101,11 @@ fun ButtonStandardHoist(
     value: Int = -2,
 ) {
     val rulesUpdateAction by rulesVm.eventMatchSettingsChange.collectAsState(Event(Unit))
+    val matchConfig = rulesVm.matchConfig
     LaunchedEffect(key1 = rulesUpdateAction, block = {}) // Used to refresh composition when rules change
     ButtonStandard(
         text = stringResource(getSettingsTextIdByKeyAndValue(key, value)),
-        isSelected = isSettingsButtonSelected(key, value),
+        isSelected = isSettingsButtonSelected(key, value, matchConfig),
         onClick = { rulesVm.onMatchSettingsChange(key, value) }
     )
 }

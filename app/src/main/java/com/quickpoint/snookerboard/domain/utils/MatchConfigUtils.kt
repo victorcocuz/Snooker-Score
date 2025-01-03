@@ -1,8 +1,15 @@
 package com.quickpoint.snookerboard.domain.utils
 
 import com.quickpoint.snookerboard.R
-import com.quickpoint.snookerboard.data.*
-import com.quickpoint.snookerboard.domain.utils.MatchState.*
+import com.quickpoint.snookerboard.data.K_INT_MATCH_AVAILABLE_FRAMES
+import com.quickpoint.snookerboard.data.K_INT_MATCH_AVAILABLE_REDS
+import com.quickpoint.snookerboard.data.K_INT_MATCH_FOUL_MODIFIER
+import com.quickpoint.snookerboard.data.K_INT_MATCH_HANDICAP_FRAME
+import com.quickpoint.snookerboard.data.K_INT_MATCH_HANDICAP_MATCH
+import com.quickpoint.snookerboard.data.K_INT_MATCH_STARTING_PLAYER
+import com.quickpoint.snookerboard.domain.utils.MatchState.GAME_IN_PROGRESS
+import com.quickpoint.snookerboard.domain.utils.MatchState.RULES_IDLE
+import com.quickpoint.snookerboard.domain.utils.MatchState.SUMMARY
 
 enum class MatchState { RULES_IDLE, GAME_IN_PROGRESS, SUMMARY }
 
@@ -13,11 +20,11 @@ fun getMatchStateFromOrdinal(ordinal: Int): MatchState = when (ordinal) {
     else -> SUMMARY
 }
 
-fun isSettingsButtonSelected(key: String, value: Int): Boolean = value == when (key) {
-    K_INT_MATCH_STARTING_PLAYER -> MatchSettings.startingPlayer
-    K_INT_MATCH_AVAILABLE_FRAMES -> MatchSettings.availableFrames
-    K_INT_MATCH_AVAILABLE_REDS -> MatchSettings.availableReds
-    K_INT_MATCH_FOUL_MODIFIER -> MatchSettings.foulModifier
+fun isSettingsButtonSelected(key: String, value: Int, matchConfig: MatchConfig): Boolean = value == when (key) {
+    K_INT_MATCH_STARTING_PLAYER -> matchConfig.startingPlayer
+    K_INT_MATCH_AVAILABLE_FRAMES -> matchConfig.availableFrames
+    K_INT_MATCH_AVAILABLE_REDS -> matchConfig.availableReds
+    K_INT_MATCH_FOUL_MODIFIER -> matchConfig.foulModifier
     else -> -1000
 }
 

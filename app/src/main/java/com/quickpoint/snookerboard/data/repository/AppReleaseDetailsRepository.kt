@@ -8,7 +8,6 @@ import com.quickpoint.snookerboard.domain.models.asDbAppReleaseVersion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 
 class AppReleaseDetailsRepository @Inject constructor(
@@ -23,7 +22,6 @@ class AppReleaseDetailsRepository @Inject constructor(
         versionDetails.forEach { appReleaseDetails ->
             daoDbVersionDetails.insertAppReleaseVersion(appReleaseDetails.asDbAppReleaseVersion())
             appReleaseDetails.asDbAppReleaseNotes().forEach {
-                Timber.e("$it")
                 daoDbAppReleaseNotes.insertAppReleaseNotes(it) }
         }
     }

@@ -2,7 +2,17 @@ package com.quickpoint.snookerboard.ui.screens.game
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -19,6 +29,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import com.quickpoint.snookerboard.core.utils.BallAdapterType
+import com.quickpoint.snookerboard.core.utils.Constants
+import com.quickpoint.snookerboard.domain.models.DomainBreak
+import com.quickpoint.snookerboard.domain.models.PotType
+import com.quickpoint.snookerboard.domain.models.ballsList
+import com.quickpoint.snookerboard.domain.models.filterBreaksByPotType
+import com.quickpoint.snookerboard.domain.models.isLastBallFoul
 import com.quickpoint.snookerboard.ui.components.BallView
 import com.quickpoint.snookerboard.ui.components.ContainerColumn
 import com.quickpoint.snookerboard.ui.components.StandardRow
@@ -26,16 +43,13 @@ import com.quickpoint.snookerboard.ui.components.TextParagraph
 import com.quickpoint.snookerboard.ui.theme.BrownDark
 import com.quickpoint.snookerboard.ui.theme.BrownMedium
 import com.quickpoint.snookerboard.ui.theme.spacing
-import com.quickpoint.snookerboard.core.utils.BallAdapterType
-import com.quickpoint.snookerboard.core.utils.Constants
-import com.quickpoint.snookerboard.domain.models.*
 
 @Composable
-fun ColumnScope.ModuleGameBreaks(frameStack: List<DomainBreak>, isAdvancedBreaksActive: Boolean) = ContainerColumn(Modifier.weight(1f)){
+fun ColumnScope.ModuleGameBreaks(breaksList: List<DomainBreak>, isAdvancedBreaksActive: Boolean) = ContainerColumn(Modifier.weight(1f)){
 
     val lazyListState = rememberLazyListState()
-    LaunchedEffect(frameStack.size) {
-        lazyListState.animateScrollToItem(frameStack.size)
+    LaunchedEffect(breaksList.size) {
+        lazyListState.animateScrollToItem(breaksList.size)
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -44,7 +58,7 @@ fun ColumnScope.ModuleGameBreaks(frameStack: List<DomainBreak>, isAdvancedBreaks
             reverseLayout = true,
             state = lazyListState
         ) {
-            items(frameStack.displayShots(isAdvancedBreaksActive)) { domainBreak ->
+            items(breaksList.filterBreaksByPotType(isAdvancedBreaksActive)) { domainBreak ->
                 StandardRow(Modifier.height(ballHeight * ((domainBreak.pots.size - 1) / 6 + 1) + MaterialTheme.spacing.medium)) {
                     SingleBreak(domainBreak, 0) { domainBreak, player ->
                         if (domainBreak.player == player || domainBreak.isLastBallFoul()) {

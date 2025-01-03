@@ -34,7 +34,7 @@ import com.quickpoint.snookerboard.data.database.models.DbScore
         DbPlayer::class,
         DbAppReleaseVersion::class,
         DbAppReleaseNotes::class],
-    version = 28,
+    version = 29,
     exportSchema = false
 )
 abstract class SnookerDatabase : RoomDatabase() {

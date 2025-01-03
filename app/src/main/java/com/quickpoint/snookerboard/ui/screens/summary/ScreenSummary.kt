@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,8 +32,6 @@ import com.quickpoint.snookerboard.MainViewModel
 import com.quickpoint.snookerboard.core.utils.StatisticsType
 import com.quickpoint.snookerboard.domain.models.DomainScore
 import com.quickpoint.snookerboard.domain.models.emptyDomainScore
-import com.quickpoint.snookerboard.domain.utils.MatchSettings
-import com.quickpoint.snookerboard.domain.utils.MatchSettings.Companion.crtPlayer
 import com.quickpoint.snookerboard.domain.utils.MatchState
 import com.quickpoint.snookerboard.navigateToRulesScreen
 import com.quickpoint.snookerboard.ui.components.BackPressHandler
@@ -50,6 +48,7 @@ import com.quickpoint.snookerboard.ui.helpers.setGameStatsValue
 import com.quickpoint.snookerboard.ui.helpers.setMatchPoints
 import com.quickpoint.snookerboard.ui.helpers.setPercentage
 import com.quickpoint.snookerboard.ui.helpers.setStatsTableBackground
+import com.quickpoint.snookerboard.ui.screens.game.GameViewModel
 import com.quickpoint.snookerboard.ui.screens.game.ScoreFrameContainer
 import com.quickpoint.snookerboard.ui.screens.game.ScoreMatchContainer
 import com.quickpoint.snookerboard.ui.screens.rules.RulesViewModel
@@ -63,6 +62,7 @@ fun ScreenSummary() {
     val mainVm = LocalView.current.findViewTreeViewModelStoreOwner().let { hiltViewModel<MainViewModel>(it!!) }
     val rulesVm = hiltViewModel<RulesViewModel>()
     val summaryVm = hiltViewModel<SummaryViewModel>()
+    val gameVm = hiltViewModel<GameViewModel>()
 
     val players by rulesVm.players.collectAsState()
     val totalsA by summaryVm.totalsA.collectAsState()
@@ -73,16 +73,16 @@ fun ScreenSummary() {
 
     LaunchedEffect(Unit) {
         mainVm.turnOffSplashScreen()
-        MatchSettings.matchState = MatchState.SUMMARY
+        gameVm.matchConfig.matchState = MatchState.SUMMARY
     }
 
-    val crtPlayer by remember { mutableStateOf(crtPlayer) }
+    val crtPlayer by remember { mutableIntStateOf(gameVm.matchConfig.crtPlayer) }
 
     FragmentContent {
         ComponentPlayerNames(crtPlayer, players)
         ContainerRow {
             ScoreFrameContainer("${totalsA.matchPoints}")
-            ScoreMatchContainer(text = MatchSettings.getDisplayFrames())
+            ScoreMatchContainer(text = gameVm.getDisplayFrames())
             ScoreFrameContainer("${totalsB.matchPoints}")
         }
         score?.let { score ->

@@ -22,10 +22,9 @@ import com.quickpoint.snookerboard.core.utils.BallAdapterType
 import com.quickpoint.snookerboard.core.utils.PlayerTagType
 import com.quickpoint.snookerboard.core.utils.colorTransition
 import com.quickpoint.snookerboard.domain.models.DomainBall
+import com.quickpoint.snookerboard.domain.models.DomainBallManager
 import com.quickpoint.snookerboard.domain.models.DomainPlayer
 import com.quickpoint.snookerboard.domain.models.PotType
-import com.quickpoint.snookerboard.domain.models.bindFoulBalls
-import com.quickpoint.snookerboard.domain.models.bindMatchBalls
 import com.quickpoint.snookerboard.domain.models.redsRemaining
 import com.quickpoint.snookerboard.ui.theme.Beige
 import com.quickpoint.snookerboard.ui.theme.BrownDark
@@ -78,12 +77,13 @@ fun setActivePlayer(isActivePlayer: Boolean, activePlayerTag: PlayerTagType) {
 @Composable
 fun RowScope.GameButtonsBalls(
     ballsList: List<DomainBall>,
+    ballManager: DomainBallManager,
     ballSize: Dp,
     ballAdapterType: BallAdapterType = BallAdapterType.MATCH,
     selectionPosition: Long = -1,
     onClick: (PotType, DomainBall) -> Unit = { _: PotType, _: DomainBall -> },
 ) = StandardLazyRow(Modifier.weight(1f),
-    lazyItems = if (ballAdapterType == BallAdapterType.MATCH) ballsList.bindMatchBalls() else ballsList.bindFoulBalls(),
+    lazyItems = if (ballAdapterType == BallAdapterType.MATCH) ballManager.getBallsListForGameScreen(ballsList) else ballManager.getBallsListForFoulDialog(ballsList),
     key = { profile -> profile.ballId }
 ) { profile ->
     BallView(

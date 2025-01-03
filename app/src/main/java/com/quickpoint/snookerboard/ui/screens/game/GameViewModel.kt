@@ -3,98 +3,54 @@ package com.quickpoint.snookerboard.ui.screens.game
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.quickpoint.snookerboard.BuildConfig
-import com.quickpoint.snookerboard.core.utils.Constants
 import com.quickpoint.snookerboard.core.utils.JobQueue
 import com.quickpoint.snookerboard.core.utils.MatchAction
-import com.quickpoint.snookerboard.core.utils.MatchAction.FOUL_DIALOG
 import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_ENDED
 import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_ENDING_DIALOG
-import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_LAST_BLACK_FOULED_DIALOG
 import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_LOG_ACTIONS_DIALOG
 import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_MISS_FORFEIT
-import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_MISS_FORFEIT_DIALOG
 import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_RERACK_DIALOG
-import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_RESPOT_BLACK_DIALOG
 import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_START_NEW
 import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_TO_END
-import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_UNDO
-import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_UPDATED
 import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_CANCEL
 import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_CANCEL_DIALOG
 import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_ENDED
 import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_ENDING_DIALOG
-import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_START_NEW
 import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_TO_END
 import com.quickpoint.snookerboard.core.utils.MatchAction.NAV_TO_POST_MATCH
 import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_FRAME_ENDING_DIALOG
 import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_FRAME_RERACK_DIALOG
 import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_MATCH_ENDING_DIALOG
-import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_NO_BALL
 import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_UNDO
-import com.quickpoint.snookerboard.core.utils.sendEmail
-import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_FREEBALL
-import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_LONG_SHOT
-import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_REST_SHOT
-import com.quickpoint.snookerboard.domain.models.DomainActionLog
+import com.quickpoint.snookerboard.domain.models.BallFactory
+import com.quickpoint.snookerboard.domain.models.DomainActionLogsManager
 import com.quickpoint.snookerboard.domain.models.DomainBall
-import com.quickpoint.snookerboard.domain.models.DomainBall.FREEBALL
-import com.quickpoint.snookerboard.domain.models.DomainBall.NOBALL
 import com.quickpoint.snookerboard.domain.models.DomainBallManager
-import com.quickpoint.snookerboard.domain.models.DomainBreak
+import com.quickpoint.snookerboard.domain.models.DomainBreakManager
 import com.quickpoint.snookerboard.domain.models.DomainFrame
-import com.quickpoint.snookerboard.domain.models.DomainPot
-import com.quickpoint.snookerboard.domain.models.DomainPot.FOULATTEMPT
-import com.quickpoint.snookerboard.domain.models.DomainPot.FREE
-import com.quickpoint.snookerboard.domain.models.DomainScore
+import com.quickpoint.snookerboard.domain.models.DomainFrameManager
+import com.quickpoint.snookerboard.domain.models.DomainScoreManager
 import com.quickpoint.snookerboard.domain.models.PotAction
 import com.quickpoint.snookerboard.domain.models.PotAction.FIRST
 import com.quickpoint.snookerboard.domain.models.PotType
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_ADDRED
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FOUL
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FOUL_ATTEMPT
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FREE
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FREE_ACTIVE
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_HIT
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_LAST_BLACK_FOULED
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_MISS
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_REMOVE_COLOR
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_REMOVE_RED
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_RESPOT_BLACK
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_SAFE
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_SAFE_MISS
-import com.quickpoint.snookerboard.domain.models.PotType.TYPE_SNOOKER
-import com.quickpoint.snookerboard.domain.models.addLog
-import com.quickpoint.snookerboard.domain.models.calculatePoints
-import com.quickpoint.snookerboard.domain.models.endFrame
-import com.quickpoint.snookerboard.domain.models.foulValue
-import com.quickpoint.snookerboard.domain.models.frameScoreDiff
-import com.quickpoint.snookerboard.domain.models.getPotFromType
 import com.quickpoint.snookerboard.domain.models.isFrameAndMatchEqual
 import com.quickpoint.snookerboard.domain.models.isFrameEqual
 import com.quickpoint.snookerboard.domain.models.isFrameInProgress
-import com.quickpoint.snookerboard.domain.models.isLastBall
-import com.quickpoint.snookerboard.domain.models.isLastBlack
 import com.quickpoint.snookerboard.domain.models.isMatchInProgress
-import com.quickpoint.snookerboard.domain.models.lastPotType
-import com.quickpoint.snookerboard.domain.models.listOfPotTypesForNoBallSnackbar
-import com.quickpoint.snookerboard.domain.models.onPot
-import com.quickpoint.snookerboard.domain.models.removeLastPotFromFrameStack
-import com.quickpoint.snookerboard.domain.models.resetBalls
-import com.quickpoint.snookerboard.domain.models.resetFrame
-import com.quickpoint.snookerboard.domain.models.resetMatch
 import com.quickpoint.snookerboard.domain.repository.DataStoreRepository
 import com.quickpoint.snookerboard.domain.repository.GameRepository
-import com.quickpoint.snookerboard.domain.utils.MatchSettings
+import com.quickpoint.snookerboard.domain.usecases.AssignPotUseCase
+import com.quickpoint.snookerboard.domain.usecases.EmailLogsUseCase
+import com.quickpoint.snookerboard.domain.usecases.EndFrameUseCase
+import com.quickpoint.snookerboard.domain.usecases.LoadMatchUseCase
+import com.quickpoint.snookerboard.domain.usecases.ResetFrameUseCase
+import com.quickpoint.snookerboard.domain.usecases.ResetMatchUseCase
+import com.quickpoint.snookerboard.domain.utils.MatchConfig
 import com.quickpoint.snookerboard.ui.navigation.MenuItem
 import com.quickpoint.snookerboard.ui.navigation.MenuItemIds
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -103,19 +59,29 @@ import javax.inject.Inject
 class GameViewModel @Inject constructor(
     private val gameRepository: GameRepository,
     val dataStoreRepository: DataStoreRepository,
-    private val ballManager: DomainBallManager,
-    private val matchSettings: MatchSettings,
-    ) : ViewModel() {
+    val ballFactory: BallFactory,
+    val ballManager: DomainBallManager,
+    private val breakManager: DomainBreakManager,
+    val scoreManager: DomainScoreManager,
+    val matchConfig: MatchConfig,
+    val frameManager: DomainFrameManager,
+    private val actionLogsManager: DomainActionLogsManager,
 
-    // Variables
-    var score: MutableList<DomainScore> = mutableListOf()
-    var ballStack: MutableList<DomainBall> = mutableListOf()
-    var frameStack: MutableList<DomainBreak> = mutableListOf()
-    private var actionLogs: MutableList<DomainActionLog> = mutableListOf()
-    private var isUpdateInProgress = false // Deactivate all buttons & options menu if frame is updating
+    private val loadMatchUseCase: LoadMatchUseCase,
+    private val resetMatchUseCase: ResetMatchUseCase,
+    private val resetFrameUseCase: ResetFrameUseCase,
+    private val endFrameUseCase: EndFrameUseCase,
+    private val emailLogsUseCase: EmailLogsUseCase,
+    private val assignPotUseCase: AssignPotUseCase
+) : ViewModel() {
+
     private lateinit var jobQueue: JobQueue
+    fun getDisplayFrames() = matchConfig.formatAvailableFramesForDisplay()
 
-    // Observables
+    init {
+        observeBreakListFlow()
+    }
+
     private val _eventAction = MutableSharedFlow<MatchAction?>()
     val eventAction = _eventAction.asSharedFlow()
     fun onEventGameAction(matchAction: MatchAction?, queue: Boolean = false): Boolean {
@@ -126,171 +92,81 @@ class GameViewModel @Inject constructor(
         return matchAction != null
     }
 
-    private val _frameState: MutableStateFlow<DomainFrame> =
-        MutableStateFlow(DomainFrame(0, emptyList(), emptyList(), emptyList(), emptyList(), 0))
-    val frameState = _frameState.asStateFlow()
-    private fun onEventFrameUpdated(actionLog: DomainActionLog) = jobQueue.submit {
-        _frameState.value =
-            DomainFrame(MatchSettings.crtFrame, ballStack, score, frameStack, actionLogs.toList(), MatchSettings.maxFramePoints)
-        if (actionLogs.size > 0) gameRepository.saveCrtFrame(_frameState.value)
-        actionLogs.addLog(actionLog)
-        onEventGameAction(FRAME_UPDATED)
-        savePref(K_BOOL_TOGGLE_LONG_SHOT, false)
-        savePref(K_BOOL_TOGGLE_REST_SHOT, false)
+    val frameState = frameManager.frameState
+
+    private fun observeBreakListFlow() {
+        viewModelScope.launch {
+            assignPotUseCase.eventFlow.collect { (action, enqueueable) ->
+                onEventGameAction(action, enqueueable)
+            }
+        }
+        viewModelScope.launch {
+            breakManager.breakListFlow.collect { breakList ->
+                Timber.e("Break List: $breakList")
+            }
+        }
+        viewModelScope.launch {
+            ballManager.ballsListFlow.collect { ballList ->
+                frameManager.updateFrame {
+                    copy(ballsList = ballList)
+                }
+            }
+        }
+        viewModelScope.launch {
+            scoreManager.scoreListFlow.collect { scoreList ->
+                frameManager.updateFrame {
+                    copy(scoreList = scoreList)
+                }
+            }
+        }
+        viewModelScope.launch {
+            frameManager.frameState.collect { domainFrame ->
+                if (actionLogsManager.actionLogs.value.isNotEmpty()) {
+                    gameRepository.saveCrtFrame(domainFrame)
+                }
+            }
+        }
     }
 
-    fun savePref(key: String, value: Boolean) = dataStoreRepository.savePrefs(key, value)
-
-    // Match actions
     fun loadMatch(frame: DomainFrame?) = frame?.let {
         jobQueue = JobQueue()
-        score = it.score.toMutableList()
-        ballStack = it.ballStack.toMutableList()
-        frameStack = it.frameStack.toMutableList()
-        onEventFrameUpdated(DomainActionLog("loadMatch(): ${it.getTextInfo()}"))
+        loadMatchUseCase(frame)
     }
 
     fun resetMatch() {
         jobQueue = JobQueue()
-        score.resetMatch()
-        resetFrame(MATCH_START_NEW)
-        onEventFrameUpdated(DomainActionLog("resetMatch()"))
+        resetMatchUseCase()
     }
 
     fun resetFrame(matchAction: MatchAction) {
-        savePref(K_BOOL_TOGGLE_FREEBALL, false)
-        MatchSettings.resetFrameAndGetFirstPlayer(matchAction)
-        score.resetFrame(matchAction)
-        ballStack.resetBalls()
-        frameStack.clear()
-        onEventFrameUpdated(DomainActionLog("resetFrame()"))
+        resetFrameUseCase(matchAction)
     }
 
     fun endFrame(matchAction: MatchAction) {
-        score.endFrame()
-        onEventFrameUpdated(DomainActionLog("endFrame()"))
+        endFrameUseCase()
         if (matchAction in listOf(FRAME_MISS_FORFEIT, FRAME_TO_END, FRAME_ENDED)) onEventGameAction(FRAME_START_NEW, true)
         if (matchAction in listOf(MATCH_TO_END, MATCH_ENDED)) onEventGameAction(NAV_TO_POST_MATCH, true)
     }
 
-    fun assignPot(potType: PotType?, ball: DomainBall = NOBALL(), action: PotAction = FIRST) = viewModelScope.launch {
-        if (!isUpdateInProgress) {
-            isUpdateInProgress = true
-            if (potType == null) handleUndo()
-            else {
-                val pot = potType.getPotFromType(ball, action, dataStoreRepository.getShotType())
-                if (handlePotExceptionsBefore(pot)) isUpdateInProgress = false
-                else {
-                    handlePot(
-                        if (pot.ball is FREEBALL) FREE(
-                            ball = FREEBALL(points = pot.ball.points),
-                            shotType = dataStoreRepository.getShotType()
-                        ) else pot
-                    )
-                    handlePotExceptionsPost(pot)
-                }
-            }
-            isUpdateInProgress = false
-        }
+    fun assignPot(potType: PotType?, ball: DomainBall? = null, action: PotAction = FIRST) = viewModelScope.launch {
+        assignPotUseCase(potType, ball, action)
     }
-
-    // Handle Pot
-    private fun handlePotExceptionsBefore(pot: DomainPot): Boolean = onEventGameAction(
-        when {
-            ballStack.isLastBall() && (pot.potType in listOfPotTypesForNoBallSnackbar) -> SNACK_NO_BALL
-            pot is FOULATTEMPT -> FOUL_DIALOG
-            else -> null
-        }
-    )
-
-    private fun handlePot(pot: DomainPot) {
-        pot.potId = MatchSettings.uniqueId
-        handlePotFreeballToggle(pot.potType)
-        ballManager.onPot(ballStack, pot.potType, pot.potAction)
-        frameStack.onPot(pot, score[MatchSettings.crtPlayer].pointsWithoutReturn, score)
-        score.calculatePoints(pot, 1, ballStack.foulValue())
-        val actionLog = pot.getActionLog("handlePot()", ballStack.lastOrNull()?.ballType, frameStack.size)
-        MatchSettings.crtPlayer = MatchSettings.getCrtPlayerFromPotAction(pot.potAction)
-        onEventFrameUpdated(actionLog)
-    }
-
-    private fun handlePotExceptionsPost(pot: DomainPot) {
-        if (MatchSettings.counterRetake == 3) viewModelScope.launch {
-            delay(200)
-            onEventGameAction(FRAME_MISS_FORFEIT_DIALOG)
-        }
-        if (pot.potType == TYPE_FOUL && ballStack.isLastBlack() && !score.isFrameEqual()) onEventGameAction(
-            FRAME_LAST_BLACK_FOULED_DIALOG,
-            true
-        )
-        if (ballStack.isLastBall()) onEventGameAction(if (score.isFrameEqual()) FRAME_RESPOT_BLACK_DIALOG else FRAME_ENDING_DIALOG)
-    }
-
-    // Handle Undo
-    private fun handleUndo() {
-        MatchSettings.crtPlayer = frameStack.last().player
-        val pot = frameStack.removeLastPotFromFrameStack(score)
-        val actionLog = pot.getActionLog("HandleUndo()", ballStack.lastOrNull()?.ballType, frameStack.size)
-        ballManager.onUndo(ballStack, pot.potType, pot.potAction, frameStack)
-        handleUndoFreeballToggle(pot.potType, frameStack.lastPotType())
-        score.calculatePoints(pot, -1, ballStack.foulValue())
-        onEventFrameUpdated(actionLog)
-        handleUndoExceptionsPost(pot)
-    }
-
-    private fun handleUndoExceptionsPost(pot: DomainPot) = onEventGameAction(
-        when (pot.potType) {
-            TYPE_LAST_BLACK_FOULED -> FRAME_UNDO
-            TYPE_FREE_ACTIVE -> FRAME_UNDO
-            TYPE_FOUL, TYPE_REMOVE_RED -> if (frameStack.lastPotType() == TYPE_REMOVE_RED) FRAME_UNDO else null
-            else -> null
-        }, pot.potType in listOf(TYPE_FOUL, TYPE_REMOVE_RED, TYPE_FREE_ACTIVE)
-    )
-
-    // Checker methods
-    fun isFrameMathematicallyOver() = ballManager.availablePoints(ballStack) < score.frameScoreDiff()
 
     fun emailLogs(context: Context) = viewModelScope.launch {
-        val logs = gameRepository.getDomainActionLogs().toString()
-        val json = Gson().toJson(gameRepository.getDomainActionLogs())
-        val body = "${MatchSettings.getAsText()} \n\n $json \n\n $logs"
-        Timber.e(json)
-        context.sendEmail(arrayOf(BuildConfig.ADMIN_EMAIL), Constants.EMAIL_SUBJECT_LOGS, body)
+        emailLogsUseCase(context)
     }
 
     fun onMenuItemSelected(menuItem: MenuItem) {
         when (menuItem.id) {
             MenuItemIds.ID_MENU_ITEM_LOG -> onEventGameAction(FRAME_LOG_ACTIONS_DIALOG)
-            MenuItemIds.ID_MENU_ITEM_UNDO -> if (frameStack.isFrameInProgress()) assignPot(null) else onEventGameAction(SNACK_UNDO)
-            MenuItemIds.ID_MENU_ITEM_RERACK -> onEventGameAction(if (frameStack.isFrameInProgress()) FRAME_RERACK_DIALOG else SNACK_FRAME_RERACK_DIALOG)
-            MenuItemIds.ID_MENU_ITEM_CONCEDE_FRAME -> onEventGameAction(if (!score.isFrameEqual()) FRAME_ENDING_DIALOG else SNACK_FRAME_ENDING_DIALOG)
-            MenuItemIds.ID_MENU_ITEM_CONCEDE_MATCH -> onEventGameAction(if (!score.isFrameAndMatchEqual()) MATCH_ENDING_DIALOG else SNACK_MATCH_ENDING_DIALOG)
-            MenuItemIds.ID_MENU_ITEM_CANCEL_MATCH -> onEventGameAction(if (score.isMatchInProgress()) MATCH_CANCEL_DIALOG else MATCH_CANCEL)
-            else -> {}
-        }
-    }
-
-    private fun handlePotFreeballToggle(potType: PotType) { // Control freeball visibility and selection
-        when (potType) {
-            TYPE_FREE_ACTIVE -> dataStoreRepository.savePrefAndSwitchBoolValue(K_BOOL_TOGGLE_FREEBALL)
-            TYPE_HIT, TYPE_FREE, TYPE_MISS, TYPE_SAFE, TYPE_SAFE_MISS, TYPE_SNOOKER, TYPE_FOUL -> dataStoreRepository.savePrefs(
-                K_BOOL_TOGGLE_FREEBALL, false
+            MenuItemIds.ID_MENU_ITEM_UNDO -> if (frameState.value.breaksList.isFrameInProgress()) assignPot(null) else onEventGameAction(
+                SNACK_UNDO
             )
-
-            TYPE_ADDRED, TYPE_REMOVE_RED, TYPE_REMOVE_COLOR, TYPE_LAST_BLACK_FOULED, TYPE_RESPOT_BLACK, TYPE_FOUL_ATTEMPT -> {}
-        }
-    }
-
-    private fun handleUndoFreeballToggle(potType: PotType, lastPotType: PotType?) {
-        when (potType) {
-            TYPE_FREE -> dataStoreRepository.savePrefAndSwitchBoolValue(K_BOOL_TOGGLE_FREEBALL)
-            TYPE_FREE_ACTIVE -> dataStoreRepository.savePrefs(K_BOOL_TOGGLE_FREEBALL, false)
-            TYPE_SAFE, TYPE_MISS, TYPE_SAFE_MISS, TYPE_SNOOKER, TYPE_FOUL -> when (lastPotType) {
-                TYPE_FREE_ACTIVE -> dataStoreRepository.savePrefAndSwitchBoolValue(K_BOOL_TOGGLE_FREEBALL)
-                else -> dataStoreRepository.savePrefs(K_BOOL_TOGGLE_FREEBALL, false)
-            }
-
-            TYPE_HIT, TYPE_ADDRED, TYPE_REMOVE_RED, TYPE_REMOVE_COLOR, TYPE_LAST_BLACK_FOULED, TYPE_RESPOT_BLACK, TYPE_FOUL_ATTEMPT -> {}
+            MenuItemIds.ID_MENU_ITEM_RERACK -> onEventGameAction(if (frameState.value.breaksList.isFrameInProgress()) FRAME_RERACK_DIALOG else SNACK_FRAME_RERACK_DIALOG)
+            MenuItemIds.ID_MENU_ITEM_CONCEDE_FRAME -> onEventGameAction(if (!frameState.value.scoreList.isFrameEqual()) FRAME_ENDING_DIALOG else SNACK_FRAME_ENDING_DIALOG)
+            MenuItemIds.ID_MENU_ITEM_CONCEDE_MATCH -> onEventGameAction(if (!frameState.value.scoreList.isFrameAndMatchEqual()) MATCH_ENDING_DIALOG else SNACK_MATCH_ENDING_DIALOG)
+            MenuItemIds.ID_MENU_ITEM_CANCEL_MATCH -> onEventGameAction(if (frameState.value.scoreList.isMatchInProgress()) MATCH_CANCEL_DIALOG else MATCH_CANCEL)
+            else -> {}
         }
     }
 }

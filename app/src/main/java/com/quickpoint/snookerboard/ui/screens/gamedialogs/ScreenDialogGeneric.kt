@@ -40,14 +40,14 @@ fun DialogGeneric(
             TextSubtitle(getGenericDialogTitleText(matchActions[1], matchActions[2]))
             TextSubtitle(getGenericDialogQuestionText(matchActions[1], matchActions[2]))
             if (matchActions[1] in listOf(MATCH_ENDED_DISCARD_FRAME, FRAME_MISS_FORFEIT))
-                TextParagraph(getDialogGameNote(matchActions[1], domainFrame?.value?.score))
+                TextParagraph(getDialogGameNote(matchActions[1], domainFrame?.value?.scoreList))
             Divider()
             ContainerRow(title = stringResource(R.string.d_generic_module_actions)) {
                 if (matchActions[0] != IGNORE)
                     ButtonStandard(text = stringResource(R.string.d_generic_answer_a_generic)) { onConfirm(matchActions[0]) }
                 if (matchActions[1] == MATCH_ENDED_DISCARD_FRAME)
                     ButtonStandard(text = getDialogGameBText(matchActions[1])) { onConfirm(matchActions[1]) }
-                if (!(matchActions[1] !in listOf(MATCH_ENDED_DISCARD_FRAME, IGNORE) && domainFrame?.value?.score?.isFrameEqual() == true))
+                if (!(matchActions[1] !in listOf(MATCH_ENDED_DISCARD_FRAME, IGNORE) && domainFrame?.value?.scoreList?.isFrameEqual() == true))
                     ButtonStandard(text = getDialogGameCText(matchActions[1], matchActions[2])) { onConfirm(matchActions[2]) }
             }
         }

@@ -13,6 +13,7 @@ interface DataStoreRepository {
     val toggleRestShot: Flow<Boolean>
     val toggleFreeball: Flow<Boolean>
 
+    val uniqueId: Flow<Long>
     val availableFrames: Flow<Int>
     val availableReds: Flow<Int>
     val foulModifier: Flow<Int>
@@ -31,5 +32,5 @@ interface DataStoreRepository {
 
     suspend fun getShotType(): ShotType
     suspend fun getPreferences(): Preferences
-    suspend fun loadPreferences(): Job
+    suspend fun incrementAndGetUniqueId(): Long
 }

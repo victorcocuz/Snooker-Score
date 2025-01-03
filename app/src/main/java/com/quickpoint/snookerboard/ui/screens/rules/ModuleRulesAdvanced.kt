@@ -37,12 +37,12 @@ fun ModuleRulesAdvanced(rulesVm: RulesViewModel, dialogVm: DialogViewModel, show
         }
         ContainerRow(title = stringResource(R.string.l_rules_extra_tv_handicap_frame_label)) {
             ButtonStandardHoist(rulesVm = rulesVm, key = K_INT_MATCH_HANDICAP_FRAME, value = -10)
-            RulesHandicapLabel(rulesVm = rulesVm, key = K_INT_MATCH_HANDICAP_FRAME)
+            RulesHandicapLabel(rulesVm = rulesVm, key = K_INT_MATCH_HANDICAP_FRAME, rulesVm.matchConfig)
             ButtonStandardHoist(rulesVm = rulesVm, key = K_INT_MATCH_HANDICAP_FRAME, value = 10)
         }
         ContainerRow(title = stringResource(R.string.l_rules_extra_tv_handicap_match_label)) {
             ButtonStandardHoist(rulesVm = rulesVm, key = K_INT_MATCH_HANDICAP_MATCH, value = -1)
-            RulesHandicapLabel(rulesVm = rulesVm, key = K_INT_MATCH_HANDICAP_MATCH)
+            RulesHandicapLabel(rulesVm = rulesVm, key = K_INT_MATCH_HANDICAP_MATCH, rulesVm.matchConfig)
             ButtonStandardHoist(rulesVm = rulesVm, key = K_INT_MATCH_HANDICAP_MATCH, value = 1)
         }
     }

@@ -1,13 +1,19 @@
 package com.quickpoint.snookerboard.data.repository
 
 import com.quickpoint.snookerboard.data.database.SnookerDatabase
-import com.quickpoint.snookerboard.data.database.models.DbFrameWithScoreAndBreakWithPotsAndBallStack
 import com.quickpoint.snookerboard.data.database.models.asDomain
 import com.quickpoint.snookerboard.data.database.models.asDomainPair
 import com.quickpoint.snookerboard.domain.models.DomainFrame
 import com.quickpoint.snookerboard.domain.models.DomainScore
+import com.quickpoint.snookerboard.domain.models.asDbBallStack
+import com.quickpoint.snookerboard.domain.models.asDbBreaks
+import com.quickpoint.snookerboard.domain.models.asDbCrtScore
+import com.quickpoint.snookerboard.domain.models.asDbDebugFrameActions
+import com.quickpoint.snookerboard.domain.models.asDbFrame
+import com.quickpoint.snookerboard.domain.models.asDbPots
 import com.quickpoint.snookerboard.domain.repository.GameRepository
-import com.quickpoint.snookerboard.domain.utils.MatchSettings
+import com.quickpoint.snookerboard.domain.utils.MatchConfig
+import com.quickpoint.snookerboard.domain.utils.MatchState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -15,8 +21,9 @@ import timber.log.Timber
 import javax.inject.Inject
 
 class GameRepositoryImpl @Inject constructor(
-    database: SnookerDatabase
-) : GameRepository {
+    database: SnookerDatabase,
+    private val matchConfig: MatchConfig
+    ) : GameRepository {
 
     private val daoDbActionLog = database.daoDbActionLog
     private val daoDbBall = database.daoDbBall
@@ -25,10 +32,12 @@ class GameRepositoryImpl @Inject constructor(
     private val daoDbPot = database.daoDbPot
     private val daoDbScore = database.daoDbScore
 
-    override suspend fun getCrtFrame(): DbFrameWithScoreAndBreakWithPotsAndBallStack? = withContext(Dispatchers.IO) {
+    override suspend fun getCrtFrame(): DomainFrame? = withContext(Dispatchers.IO) {
+        matchConfig.loadMatchIfSaved()
         val crtFrame = daoDbFrame.getCrtFrame()
-        Timber.i("getCrtFrame(): State is: ${MatchSettings.matchState}, CrtFrame is: ${crtFrame?.frame?.frameId}, frameCount is: ${MatchSettings.crtFrame}")
-        crtFrame
+        Timber.i("getCrtFrame(): State is: ${matchConfig.matchState}, CrtFrame is: ${crtFrame?.frame?.frameId}, frameCount is: ${matchConfig.crtFrame}")
+        if (crtFrame == null) matchConfig.matchState = MatchState.RULES_IDLE
+        crtFrame?.asDomain()
     }
 
     override suspend fun saveCrtFrame(frame: DomainFrame) = withContext(Dispatchers.IO) {
@@ -43,12 +52,12 @@ class GameRepositoryImpl @Inject constructor(
         dbBreaks.lastOrNull()?.let { daoDbBreak.insertOrUpdateMatchBreak(it) }
 
         for (dbBreakId in daoDbBreak.getCrtFrameBreaks(frame.frameId)
-            .map { it.breakId }) { // If break exists in frameStack, but not in Db, remove from Db
+            .map { it.breakId }) { // If break exists in breaksList, but not in Db, remove from Db
             if (!dbBreaks.map { it.breakId }.contains(dbBreakId)) daoDbBreak.deleteMatchBreak(dbBreakId)
         }
 
         // Pots - only check pots from crt break
-        frame.frameStack.lastOrNull()?.apply {
+        frame.breaksList.lastOrNull()?.apply {
             val dbBreakPots = asDbPots(breakId)
             dbBreakPots.lastOrNull()?.let { daoDbPot.insertOrUpdateBreakPot(it) }
             for (dbPotId in daoDbPot.getCrtBreakPots(breakId)
@@ -66,10 +75,11 @@ class GameRepositoryImpl @Inject constructor(
 
         // Debug Actions - Only check actions for crt frameF
         frame.asDbDebugFrameActions().lastOrNull()?.let { daoDbActionLog.insertOrUpdateDebugFrameActions(it) }
-        Timber.i("saveCrtFrame(): id: ${frame.frameId} score: ${frame.score[0].framePoints} vs ${frame.score[1].framePoints} ")
+        Timber.i("saveCrtFrame(): id: ${frame.frameId} score: ${frame.scoreList[0].framePoints} vs ${frame.scoreList[1].framePoints} ")
     }
 
-    override suspend fun deleteCrtFrame(frameId: Long) = withContext(Dispatchers.IO) {
+    override suspend fun deleteCrtFrame() = withContext(Dispatchers.IO) {
+        val frameId = matchConfig.crtFrame
         daoDbFrame.deleteCrtFrame(frameId)
         daoDbScore.deleteCrtFrameScore(frameId)
         val crtBreaks = daoDbBreak.getCrtFrameBreaks(frameId)
@@ -83,6 +93,8 @@ class GameRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteCrtMatch() = withContext(Dispatchers.IO) {
+        matchConfig.matchState = MatchState.RULES_IDLE
+        matchConfig.resetRules()
         daoDbScore.clear()
         daoDbBreak.clear()
         daoDbPot.clear()

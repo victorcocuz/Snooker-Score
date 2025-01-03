@@ -21,7 +21,6 @@ import com.quickpoint.snookerboard.R
 import com.quickpoint.snookerboard.core.base.Event
 import com.quickpoint.snookerboard.data.K_INT_MATCH_AVAILABLE_FRAMES
 import com.quickpoint.snookerboard.data.K_INT_MATCH_STARTING_PLAYER
-import com.quickpoint.snookerboard.domain.utils.MatchSettings
 import com.quickpoint.snookerboard.ui.components.ButtonStandardHoist
 import com.quickpoint.snookerboard.ui.components.ContainerRow
 import com.quickpoint.snookerboard.ui.theme.spacing
@@ -58,10 +57,10 @@ fun ModuleNumberPicker(rulesVm: RulesViewModel) = ContainerRow(title = stringRes
                 textColor = Color.WHITE
                 minValue = 1
                 maxValue = 19
-                value = MatchSettings.availableFrames
+                value = rulesVm.matchConfig.availableFrames
                 displayedValues = (minValue until maxValue * 2).filter { it % 2 != 0 }.map { it.toString() }.toTypedArray()
                 setOnValueChangedListener { _, _, newVal -> rulesVm.onMatchSettingsChange(K_INT_MATCH_AVAILABLE_FRAMES, newVal) }
             }
         },
-        update = { it.value = MatchSettings.availableFrames })
+        update = { it.value = rulesVm.matchConfig.availableFrames })
 }

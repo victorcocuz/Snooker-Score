@@ -11,7 +11,7 @@ data class DomainActionLog(
     val potAction: PotAction? = null,
     val player: Int? = null,
     val breakCount: Int? = null,
-    val ballStackLast: BallType? = null,
+    val ballsListLast: BallType? = null,
     val frameCount: Long? = null
 )
 

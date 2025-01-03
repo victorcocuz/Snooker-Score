@@ -15,7 +15,7 @@ import com.quickpoint.snookerboard.domain.models.asDbPlayer
 import com.quickpoint.snookerboard.domain.models.hasNoName
 import com.quickpoint.snookerboard.domain.repository.DataStoreRepository
 import com.quickpoint.snookerboard.domain.repository.GameRepository
-import com.quickpoint.snookerboard.domain.utils.MatchSettings
+import com.quickpoint.snookerboard.domain.utils.MatchConfig
 import com.quickpoint.snookerboard.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +32,7 @@ class RulesViewModel @Inject constructor(
     val dataStoreRepository: DataStoreRepository,
     val gameRepository: GameRepository,
     val database: SnookerDatabase,
+    val matchConfig: MatchConfig
 ) : ViewModel() {
 
     private val daoDbPlayer = database.daoDbPlayer
@@ -82,7 +83,7 @@ class RulesViewModel @Inject constructor(
                 MatchAction.SNACK_PLAYER_NAME_INCOMPLETE
             )
 
-            (MatchSettings.startingPlayer < 0) -> ScreenEvents.SnackAction(SNACK_NO_STARTING_PLAYER)
+            (matchConfig.startingPlayer < 0) -> ScreenEvents.SnackAction(SNACK_NO_STARTING_PLAYER)
             else -> ScreenEvents.Navigate(Screen.Game.route)
         }
     )
@@ -90,9 +91,9 @@ class RulesViewModel @Inject constructor(
     // Update settings, save changes in DataStore and notify the composable to recompose
     fun onMatchSettingsChange(key: String, value: Int) = viewModelScope.launch {
         when {
-            MatchSettings.handicapFrameExceedsLimit(key, value) -> onEmit(ScreenEvents.SnackAction(SNACK_HANDICAP_FRAME_LIMIT))
-            MatchSettings.handicapMatchExceedsLimit(key, value) -> onEmit(ScreenEvents.SnackAction(SNACK_HANDICAP_MATCH_LIMIT))
-            else -> MatchSettings.updateSettings(key, value)
+            matchConfig.handicapFrameExceedsLimit(key, value) -> onEmit(ScreenEvents.SnackAction(SNACK_HANDICAP_FRAME_LIMIT))
+            matchConfig.handicapMatchExceedsLimit(key, value) -> onEmit(ScreenEvents.SnackAction(SNACK_HANDICAP_MATCH_LIMIT))
+            else -> matchConfig.updateSettings(key, value)
         }
         _eventMatchSettingsChange.emit(Event(Unit))
     }

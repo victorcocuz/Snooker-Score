@@ -20,7 +20,7 @@ data class DbActionLog(
     val potAction: PotAction? = null,
     val player: Int? = null,
     val breakCount: Int? = null,
-    val ballStackLast: BallType? = null,
+    val ballsListLast: BallType? = null,
     val frameCount: Long? = null
 )
 
@@ -34,7 +34,7 @@ fun List<DbActionLog>.asDomain(): MutableList<DomainActionLog> {
             potAction = dbActionLog.potAction,
             player = dbActionLog.player,
             breakCount = dbActionLog.breakCount,
-            ballStackLast = dbActionLog.ballStackLast,
+            ballsListLast = dbActionLog.ballsListLast,
             frameCount = dbActionLog.frameCount
         )
     }.toMutableList()

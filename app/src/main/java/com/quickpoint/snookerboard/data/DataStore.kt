@@ -115,15 +115,4 @@ class DataStore(private val context: Context) {
             preferencesFlow.first()
         }
     }
-
-    fun loadPreferences() = CoroutineScope(Dispatchers.IO).launch {
-        val preferencesFlow = context.dataStore.data.catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }
-        val preferences = preferencesFlow.first()
-    }
 }

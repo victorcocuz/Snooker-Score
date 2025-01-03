@@ -27,7 +27,7 @@ data class DbFrameWithScoreAndBreakWithPotsAndBallStack(
         entityColumn = "frameId",
         entity = DbBreak::class
     )
-    val frameStack: List<DbBreakWithPots>,
+    val breaksList: List<DbBreakWithPots>,
     @Relation(
         parentColumn = "frameId",
         entityColumn = "frameId"
@@ -43,9 +43,9 @@ data class DbFrameWithScoreAndBreakWithPotsAndBallStack(
 fun DbFrameWithScoreAndBreakWithPotsAndBallStack.asDomain(): DomainFrame {
     return DomainFrame(
         frameId = frame.frameId,
-        score = frameScore.asDomain(),
-        frameStack = frameStack.asDomain(),
-        ballStack = ballStack.asDomain(),
+        scoreList = frameScore.asDomain(),
+        breaksList = breaksList.asDomain(),
+        ballsList = ballStack.asDomain(),
         actionLogs = debugFrameActions.asDomain(),
         frameMax = frame.frameMax
     )

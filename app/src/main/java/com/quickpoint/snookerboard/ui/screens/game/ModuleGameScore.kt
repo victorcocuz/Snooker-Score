@@ -1,6 +1,11 @@
 package com.quickpoint.snookerboard.ui.screens.game
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -10,9 +15,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.quickpoint.snookerboard.domain.models.DomainFrame
-import com.quickpoint.snookerboard.domain.models.availablePoints
+import com.quickpoint.snookerboard.domain.models.DomainFrameManager
 import com.quickpoint.snookerboard.domain.models.frameScoreDiff
-import com.quickpoint.snookerboard.domain.utils.MatchSettings
 import com.quickpoint.snookerboard.ui.components.ContainerColumn
 import com.quickpoint.snookerboard.ui.components.StandardRow
 import com.quickpoint.snookerboard.ui.components.TextSubtitle
@@ -22,26 +26,27 @@ import com.quickpoint.snookerboard.ui.theme.BrownMedium
 import com.quickpoint.snookerboard.ui.theme.spacing
 
 @Composable
-fun ModuleGameScore(domainFrame: DomainFrame) = ContainerColumn(Modifier.padding(0.dp, 0.dp, 0.dp, 8.dp)) {
-    val score = domainFrame.score
-    if (score.size == 2) {
-        StandardRow(modifier = Modifier.fillMaxWidth()) {
-            ScoreFrameContainer("${score[0].framePoints}")
-            ScoreMatchContainer(text = "${score[0].matchPoints} ${MatchSettings.getDisplayFrames()} ${score[1].matchPoints}")
-            ScoreFrameContainer("${score[1].framePoints}")
+fun ModuleGameScore(domainFrame: DomainFrame, frameManager: DomainFrameManager, availableFrames: String) =
+    ContainerColumn(Modifier.padding(0.dp, 0.dp, 0.dp, 8.dp)) {
+        val score = domainFrame.scoreList
+        if (score.size == 2) {
+            StandardRow(modifier = Modifier.fillMaxWidth()) {
+                ScoreFrameContainer("${score[0].framePoints}")
+                ScoreMatchContainer(text = "${score[0].matchPoints} $availableFrames ${score[1].matchPoints}")
+                ScoreFrameContainer("${score[1].framePoints}")
+            }
+            ScoreProgressBar(
+                description = "Remaining",
+                progress = frameManager.availablePoints().toFloat() / domainFrame.frameMax,
+                value = "${frameManager.availablePoints()}"
+            )
+            ScoreProgressBar(
+                description = "Difference",
+                progress = domainFrame.scoreList.frameScoreDiff().toFloat() / domainFrame.frameMax,
+                value = "${domainFrame.scoreList.frameScoreDiff()}"
+            )
         }
-        ScoreProgressBar(
-            description = "Remaining",
-            progress = domainFrame.ballStack.availablePoints().toFloat() / domainFrame.frameMax,
-            value = "${domainFrame.ballStack.availablePoints()}"
-        )
-        ScoreProgressBar(
-            description = "Difference",
-            progress = domainFrame.score.frameScoreDiff().toFloat() / domainFrame.frameMax,
-            value = "${domainFrame.score.frameScoreDiff()}"
-        )
     }
-}
 
 @Composable
 fun ScoreFrameContainer(text: String) {
@@ -67,7 +72,7 @@ fun ScoreProgressBar(
     TextSubtitle(
         modifier = Modifier.width(100.dp),
         text = description,
-         color = Beige
+        color = Beige
     )
     Spacer(Modifier.width(4.dp))
     LinearProgressIndicator(

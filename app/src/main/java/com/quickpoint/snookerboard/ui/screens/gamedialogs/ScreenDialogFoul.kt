@@ -1,7 +1,17 @@
 package com.quickpoint.snookerboard.ui.screens.gamedialogs
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -12,33 +22,52 @@ import com.google.android.material.slider.Slider
 import com.quickpoint.snookerboard.R
 import com.quickpoint.snookerboard.core.utils.BallAdapterType
 import com.quickpoint.snookerboard.core.utils.MatchAction.FOUL_DIALOG
-import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_FREEBALL
-import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_LONG_SHOT
-import com.quickpoint.snookerboard.data.K_BOOL_TOGGLE_REST_SHOT
 import com.quickpoint.snookerboard.domain.models.DomainBall
+import com.quickpoint.snookerboard.domain.models.DomainBallManager
 import com.quickpoint.snookerboard.domain.models.DomainFrame
+import com.quickpoint.snookerboard.domain.models.DomainFrameManager
 import com.quickpoint.snookerboard.domain.models.PotAction
 import com.quickpoint.snookerboard.domain.models.maxRemoveReds
-import com.quickpoint.snookerboard.ui.components.*
+import com.quickpoint.snookerboard.domain.utils.MatchConfig
+import com.quickpoint.snookerboard.ui.components.ButtonStandard
+import com.quickpoint.snookerboard.ui.components.ContainerColumn
+import com.quickpoint.snookerboard.ui.components.ContainerRow
+import com.quickpoint.snookerboard.ui.components.GameButtonsBalls
+import com.quickpoint.snookerboard.ui.components.GenericDialog
+import com.quickpoint.snookerboard.ui.components.IconButton
+import com.quickpoint.snookerboard.ui.components.StandardRow
+import com.quickpoint.snookerboard.ui.components.TextSubtitle
 import com.quickpoint.snookerboard.ui.screens.game.GameViewModel
 import com.quickpoint.snookerboard.utils.getGenericDialogTitleText
 
 @Composable
-fun DialogFoul(gameVm: GameViewModel, dialogVm: DialogViewModel, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+fun DialogFoul(
+    gameVm: GameViewModel,
+    dialogVm: DialogViewModel,
+    ballManager: DomainBallManager,
+    frameManager: DomainFrameManager,
+    matchConfig: MatchConfig,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
     if (dialogVm.isFoulDialogShown) {
-        val frame by gameVm.frameState.collectAsState()
+        val frameState by gameVm.frameState.collectAsState()
         val actionClicked by dialogVm.actionClicked.collectAsState()
         val dialogReds by dialogVm.eventDialogReds.collectAsState()
         val isCancelable = true
 
         GenericDialog(isCancelable = isCancelable, onDismissRequest = onDismiss) {
             TextSubtitle(getGenericDialogTitleText(FOUL_DIALOG, FOUL_DIALOG))
-            FoulDialogActions(dialogVm, gameVm.ballStack)
-            FoulDialogPotAction(dialogVm, frame, actionClicked)
-            FoulDialogRedsPottedSlider(dialogReds, frame.ballStack.maxRemoveReds().toFloat(), frame.ballStack.maxRemoveReds() > 0) {
+            FoulDialogActions(dialogVm, ballManager, frameState.ballsList)
+            FoulDialogPotAction(dialogVm, frameManager, actionClicked)
+            FoulDialogRedsPottedSlider(
+                dialogReds,
+                frameState.ballsList.maxRemoveReds().toFloat(),
+                frameState.ballsList.maxRemoveReds() > 0
+            ) {
                 dialogVm.onDialogReds(it)
             }
-            FoulDialogOtherActions(gameVm, frame, actionClicked)
+            FoulDialogOtherActions(gameVm, matchConfig, frameState, actionClicked)
             ContainerRow {
                 ButtonStandard(text = stringResource(R.string.f_dialog_foul_btn_cancel)) { onDismiss() }
                 ButtonStandard(text = stringResource(R.string.f_dialog_foul_btn_submit)) { onConfirm() }
@@ -48,12 +77,12 @@ fun DialogFoul(gameVm: GameViewModel, dialogVm: DialogViewModel, onDismiss: () -
 }
 
 @Composable
-fun FoulDialogActions(dialogVm: DialogViewModel, balls: List<DomainBall>) = BoxWithConstraints {
-    var selectionPosition by remember { mutableStateOf(-1L) }
+fun FoulDialogActions(dialogVm: DialogViewModel, ballManager: DomainBallManager, balls: List<DomainBall>) = BoxWithConstraints {
+    var selectionPosition by remember { mutableLongStateOf(-1L) }
     val ballSize = maxWidth / 8
 
     ContainerRow(title = stringResource(R.string.f_dialog_foul_tv_balls_label)) {
-        GameButtonsBalls(balls, ballSize, BallAdapterType.FOUL, selectionPosition) { _, domainBall ->
+        GameButtonsBalls(balls, ballManager, ballSize, BallAdapterType.FOUL, selectionPosition) { _, domainBall ->
             selectionPosition = domainBall.ballId
             dialogVm.onBallClicked(domainBall)
         }
@@ -63,7 +92,7 @@ fun FoulDialogActions(dialogVm: DialogViewModel, balls: List<DomainBall>) = BoxW
 @Composable
 fun FoulDialogPotAction(
     dialogVm: DialogViewModel,
-    domainFrame: DomainFrame,
+    frameManager: DomainFrameManager,
     actionClicked: PotAction,
 ) = ContainerRow(title = stringResource(R.string.f_dialog_foul_tv_action_label)) {
     ButtonStandard(
@@ -78,7 +107,7 @@ fun FoulDialogPotAction(
         text = stringResource(R.string.f_dialog_foul_btn_force_continue),
         height = 56.dp,
         isSelected = actionClicked == PotAction.CONTINUE,
-        isEnabled = domainFrame.isFoulAndAMiss()
+        isEnabled = frameManager.isFoulAndAMiss()
     ) { dialogVm.onActionClicked(PotAction.CONTINUE) }
     Spacer(Modifier.width(8.dp))
     ButtonStandard(
@@ -86,7 +115,7 @@ fun FoulDialogPotAction(
         text = stringResource(R.string.f_dialog_foul_btn_force_retake),
         height = 56.dp,
         isSelected = actionClicked == PotAction.RETAKE,
-        isEnabled = domainFrame.isFoulAndAMiss()
+        isEnabled = frameManager.isFoulAndAMiss()
     ) { dialogVm.onActionClicked(PotAction.RETAKE) }
 }
 
@@ -125,6 +154,7 @@ fun FoulDialogRedsPottedSlider(
 @Composable
 fun FoulDialogOtherActions(
     gameVm: GameViewModel,
+    matchConfig: MatchConfig,
     domainFrame: DomainFrame,
     actionClicked: PotAction,
 ) = ContainerRow(
@@ -137,23 +167,23 @@ fun FoulDialogOtherActions(
     val isFreeballActive by gameVm.dataStoreRepository.toggleFreeball.collectAsState(false)
     val isAdvancesStatisticsActive by gameVm.dataStoreRepository.toggleAdvancedStatistics.collectAsState(false)
 
-    val isFreeBallEnabled = actionClicked == PotAction.SWITCH && domainFrame.ballStack.size > 2
-    if (!isFreeBallEnabled) gameVm.savePref(K_BOOL_TOGGLE_FREEBALL, false)
+    val isFreeBallEnabled = actionClicked == PotAction.SWITCH && domainFrame.ballsList.size > 2
+    if (!isFreeBallEnabled) matchConfig.isFreeballEnabled = false
 
     IconButton(
         text = stringResource(R.string.l_game_actions_btn_free_ball),
         painter = painterResource(R.drawable.ic_action_shot_type_free),
         isSelected = isFreeballActive,
         isEnabled = isFreeBallEnabled
-    ) { gameVm.savePref(K_BOOL_TOGGLE_FREEBALL,!isFreeballActive) }
+    ) { matchConfig.isFreeballEnabled = !isFreeballActive }
     if (isAdvancesStatisticsActive) IconButton(
         text = stringResource(R.string.l_game_actions_btn_long),
         painter = painterResource(R.drawable.ic_action_shot_type_long),
         isSelected = isLongActive
-    ) { gameVm.savePref(K_BOOL_TOGGLE_LONG_SHOT, !isLongActive) }
+    ) { matchConfig.isLongShotToggleEnabled = !isLongActive }
     if (isAdvancesStatisticsActive) IconButton(
         text = stringResource(R.string.l_game_actions_btn_rest),
         painter = painterResource(R.drawable.ic_action_shot_type_rest),
         isSelected = isRestActive
-    ) { gameVm.savePref(K_BOOL_TOGGLE_REST_SHOT, !isRestActive) }
+    ) { matchConfig.isRestShotToggleEnabled =!isRestActive }
 }

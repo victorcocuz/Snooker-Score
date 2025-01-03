@@ -2,9 +2,49 @@ package com.quickpoint.snookerboard.core.utils
 
 import android.content.Context
 import com.quickpoint.snookerboard.R
+import com.quickpoint.snookerboard.core.utils.MatchAction.CLOSE_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FOUL_CONFIRM
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_ENDED
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_ENDING_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_FREE_ACTIVE
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_LAST_BLACK_FOULED
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_LAST_BLACK_FOULED_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_LOG_ACTIONS
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_LOG_ACTIONS_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_MISS_FORFEIT
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_MISS_FORFEIT_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_REMOVE_RED
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_RERACK
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_RERACK_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_RESPOT_BLACK
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_RESPOT_BLACK_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.FRAME_TO_END
+import com.quickpoint.snookerboard.core.utils.MatchAction.IGNORE
+import com.quickpoint.snookerboard.core.utils.MatchAction.INFO_FOUL_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_CANCEL
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_CANCEL_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_ENDED
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_ENDED_DISCARD_FRAME
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_ENDING_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.MATCH_TO_END
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_ADD_RED
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_FRAME_ENDING_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_FRAME_RERACK_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_HANDICAP_FRAME_LIMIT
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_HANDICAP_MATCH_LIMIT
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_INVALID_FOUL
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_MATCH_ENDING_DIALOG
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_NO_BALL
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_NO_STARTING_PLAYER
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_PLAYER_NAME_INCOMPLETE
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_REMOVE_COLOR
+import com.quickpoint.snookerboard.core.utils.MatchAction.SNACK_UNDO
 import com.quickpoint.snookerboard.domain.models.PotType
-import com.quickpoint.snookerboard.domain.models.PotType.*
-import com.quickpoint.snookerboard.core.utils.MatchAction.*
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FOUL
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_FREE_ACTIVE
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_LAST_BLACK_FOULED
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_REMOVE_RED
+import com.quickpoint.snookerboard.domain.models.PotType.TYPE_RESPOT_BLACK
 import timber.log.Timber
 
 enum class MatchAction {
@@ -47,7 +87,6 @@ enum class MatchAction {
     FRAME_RESPOT_BLACK_DIALOG, // When both players are tied at the end of the frame
     FRAME_RESPOT_BLACK, // After the RESPOT_BLACK_DIALOG is closed, respot black
     FRAME_FREE_ACTIVE, // After a foul, uses observer to handle pot instead of directly from gameVm
-    FRAME_UPDATED, // When frame updates are completed assign frame action that triggers the mainVm ot update DisplayScore
     FRAME_UNDO, // When triggered from gameVm execute as an action instead of recursive method
     FRAME_REMOVE_RED,
     FRAME_LOG_ACTIONS_DIALOG, // Opens a dialog allowing users to submit an action log
